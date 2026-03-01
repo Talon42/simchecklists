@@ -72,14 +72,39 @@ let checklist_sidebar_resize_listener = false;
 
 function checklist_sidebar_align() {
 	let sidebar = document.getElementById("checklist_sidebar");
+	let content = document.getElementById("content");
+	let first_section_heading;
+	let sidebar_width = 220;
+	let sidebar_gap = 20;
+	let top_offset = 10;
+	let left_offset;
 
-	if(!sidebar) { return; }
+	if(!sidebar || !content) { return; }
 	if(window.matchMedia("(max-width: 999px)").matches) {
+		sidebar.style.position = "";
+		sidebar.style.top = "";
+		sidebar.style.left = "";
+		sidebar.style.width = "";
 		sidebar.style.marginTop = "";
+		sidebar.style.maxHeight = "";
 		return;
 	}
 
-	sidebar.style.marginTop = "80px";
+	first_section_heading = content.querySelector('.sublist > .title:not(.green):not(.blue)');
+	if(first_section_heading) {
+		top_offset = Math.round(first_section_heading.getBoundingClientRect().top);
+	}
+	if(top_offset < 10) { top_offset = 10; }
+
+	left_offset = content.getBoundingClientRect().left - sidebar_width - sidebar_gap;
+	if(left_offset < 10) { left_offset = 10; }
+
+	sidebar.style.position = "fixed";
+	sidebar.style.top = top_offset + "px";
+	sidebar.style.left = left_offset + "px";
+	sidebar.style.width = sidebar_width + "px";
+	sidebar.style.marginTop = "0";
+	sidebar.style.maxHeight = "calc(100vh - " + (top_offset + 10) + "px)";
 }
 
 function checklist_sidebar_build() {
