@@ -2,8 +2,8 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ "main" ]  # Change to "main" if you deploy from main instead of dev
-  workflow_dispatch:  # Allows manual triggering from the Actions tab
+    branches: [ "main" ]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -25,7 +25,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './'  # Deploys the entire root directory as the site
+          path: './'
 
   deploy:
     environment:

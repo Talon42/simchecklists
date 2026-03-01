@@ -19,6 +19,10 @@ Check the live version of this app @ [checklist.classicgames.com.br](http://chec
 ## Status
 ![commit](https://img.shields.io/github/last-commit/jflores82/simchecklists) ![build](https://img.shields.io/github/actions/workflow/status/jflores82/simchecklists/test.yml)
 
+## Deployment
+Every push to `main` auto-deploys to GitHub Pages.
+Default project URL: https://talon42.github.io/simchecklists/
+
 ## Screenshots
 ![01](http://classicgames.com.br/temp/simcheck01.png) ![02](http://classicgames.com.br/temp/simcheck02.png)
 ![03](http://classicgames.com.br/temp/simcheck03.png) 

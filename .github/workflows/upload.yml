@@ -1,5 +1,6 @@
-on: push
-name: Deploy website on push
+on:
+  workflow_dispatch:
+name: Manual FTP deploy
 jobs:
   web-deploy:
     name: Deploy
