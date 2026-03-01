@@ -9,6 +9,53 @@ function toggleItemState(item, markDone) {
 	strikeEl.style.opacity = markDone ? "1" : "0";
 }
 
+let checklist_layout_mode = "one";
+let checklist_layout_listeners = false;
+
+function checklist_layout_apply() {
+	let content = document.getElementById("content");
+	let layout_buttons;
+	let layout_icon = "layout-one";
+
+	if(!content) { return; }
+	if(checklist_layout_mode == "two") { layout_icon = "layout-two"; }
+
+	content.classList.toggle("two-column-layout", checklist_layout_mode == "two");
+	sessionStorage.setItem("checklist_layout", checklist_layout_mode);
+
+	layout_buttons = document.querySelectorAll('.layout_icon');
+	layout_buttons.forEach(function(btn) {
+		btn.setAttribute("icon", layout_icon);
+		btn.innerHTML = iconRender(layout_icon);
+	});
+}
+
+function checklist_layout_switch() {
+	if(checklist_layout_mode == "one") {
+		checklist_layout_mode = "two";
+	} else {
+		checklist_layout_mode = "one";
+	}
+	checklist_layout_apply();
+}
+
+function checklist_layout_load() {
+	let layout_buttons;
+
+	if(sessionStorage.getItem("checklist_layout") !== null) {
+		checklist_layout_mode = sessionStorage.getItem("checklist_layout");
+	}
+	if(checklist_layout_mode !== "two") { checklist_layout_mode = "one"; }
+
+	if(!checklist_layout_listeners) {
+		layout_buttons = document.querySelectorAll('.layout_switch');
+		layout_buttons.forEach(function(btn) { btn.addEventListener('click', checklist_layout_switch, false); });
+		checklist_layout_listeners = true;
+	}
+
+	checklist_layout_apply();
+}
+
 function checklist_item_cross() {
 	let itemsList = document.getElementsByClassName('items');
 	let isDone = this.classList.contains('items-done');
@@ -122,6 +169,8 @@ function checklist_process() {
 	}
 
 	for (var i = 0; i < titlesList.length; i++) { titlesList[i].addEventListener('dblclick', checklist_subcheckcross, false); }
+
+	checklist_layout_load();
 }
 
 async function checklist_load_file(checklist_file) { 

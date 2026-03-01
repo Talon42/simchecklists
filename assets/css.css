@@ -65,11 +65,43 @@ a { text-decoration:none; }
 	max-width:600px;
 	padding-bottom:40px; 
 }
+
+#content {
+	margin-top:20px;
+}
+
+.content.two-column-layout {
+	max-width:1200px;
+	column-count:2;
+	column-gap:20px;
+}
+
+.content.two-column-layout .sublist {
+	break-inside:auto;
+	-webkit-column-break-inside:auto;
+}
+
+.content.two-column-layout .title,
+.content.two-column-layout .items,
+.content.two-column-layout .comment {
+	break-inside:avoid-column;
+	-webkit-column-break-inside:avoid;
+}
+
+.content.two-column-layout .title.green {
+	column-span:all;
+	-webkit-column-span:all;
+	text-align:center;
+}
 			
 .title { 
 	font-size:16px; 
 	padding:10px;
 } 
+
+.title.green {
+	margin-bottom:20px;
+}
 	
 .icao-window { 
 	position:fixed;
@@ -318,6 +350,10 @@ a[mode="light"] { color:var(--light_txt_green); }
 		left:1%;
 		top:5%;
 		flex-direction:column;
+	}
+	.content.two-column-layout {
+		max-width:600px;
+		column-count:1;
 	}
 }
 	
