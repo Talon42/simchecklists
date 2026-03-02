@@ -197,8 +197,9 @@ body.two-column-view .checklist-shell {
 	height:calc(100dvh - 40px);
 	max-height:calc(100dvh - 40px);
 	overflow-x:hidden;
-	overflow-y:hidden;
-	overscroll-behavior-x:contain;
+	overflow-y:hidden;	
+	overscroll-behavior:contain;
+	touch-action:none;
 }
 
 #content.two-column-layout > .sublist {
