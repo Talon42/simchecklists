@@ -491,7 +491,7 @@ body.modern-design[mode="dark"] .comment {
 body.modern-design[mode="dark"] .item.items-done,
 body.modern-design[mode="dark"] .items.items-done .state,
 body.modern-design[mode="dark"] .items.items-done .item-dots {
-	color:#4a4a4a;
+	color:#9c9c9c;
 }
 
 a[mode="dark"] { color:var(--dark_txt_green); }
@@ -546,7 +546,7 @@ body.modern-design[mode="light"] .comment {
 body.modern-design[mode="light"] .item.items-done,
 body.modern-design[mode="light"] .items.items-done .state,
 body.modern-design[mode="light"] .items.items-done .item-dots {
-	color:#bfbfbf;
+	color:#8a8a8a;
 }
 
 a[mode="light"] { color:var(--light_txt_green); }
