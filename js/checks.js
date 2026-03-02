@@ -11,6 +11,225 @@ function toggleItemState(item, markDone) {
 
 let checklist_layout_mode = "one";
 let checklist_layout_listeners = false;
+let checklist_layout_resize_listener = false;
+let checklist_layout_wheel_listener = false;
+let checklist_layout_scroll_listener = false;
+let checklist_layout_wheel_lock = false;
+
+function checklist_layout_is_two_column_desktop() {
+	return checklist_layout_mode == "two" && !window.matchMedia("(max-width: 999px)").matches;
+}
+
+function checklist_layout_current_page(content) {
+	let page_width;
+	let total_pages;
+	let current_page;
+
+	if(!content || content.clientWidth <= 0) {
+		return { current: 1, total: 1, width: 0, start: 0, end: 0 };
+	}
+	page_width = content.clientWidth;
+	total_pages = Math.max(1, Math.ceil(content.scrollWidth / page_width));
+	current_page = Math.round(content.scrollLeft / page_width) + 1;
+	if(current_page < 1) { current_page = 1; }
+	if(current_page > total_pages) { current_page = total_pages; }
+
+	return {
+		current: current_page,
+		total: total_pages,
+		width: page_width,
+		start: (current_page - 1) * page_width,
+		end: current_page * page_width
+	};
+}
+
+function checklist_layout_get_persistent_title(content) {
+	let title_el = document.getElementById("checklist_persistent_title");
+	let current_mode = "dark";
+	let top_chrome_inner = document.getElementById("checklist_top_chrome_inner");
+	let title_parent = top_chrome_inner;
+
+	if(!title_parent && content && content.parentNode) {
+		title_parent = content.parentNode;
+	}
+	if(title_el || !title_parent) { return title_el; }
+	if(document.body && document.body.getAttribute("mode")) {
+		current_mode = document.body.getAttribute("mode");
+	}
+
+	title_el = document.createElement("div");
+	title_el.id = "checklist_persistent_title";
+	title_el.className = "title green checklist-persistent-title";
+	title_el.setAttribute("mode", current_mode);
+	title_parent.appendChild(title_el);
+	return title_el;
+}
+
+function checklist_layout_update_top_chrome_offset() {
+	let root = document.documentElement;
+	let chrome = document.getElementById("checklist_top_chrome");
+	let offset = 0;
+
+	if(!root) { return; }
+	if(chrome && checklist_layout_mode == "one" && window.matchMedia("(min-width: 1000px)").matches) {
+		offset = Math.ceil(chrome.getBoundingClientRect().height);
+	}
+	root.style.setProperty("--single-page-top-offset", offset + "px");
+}
+
+function checklist_layout_update_pagination_indicator() {
+	let content = document.getElementById("content");
+	let main_title;
+	let persistent_title;
+	let page_info;
+	let base_title;
+	let normalized_title;
+
+	if(!content) { return; }
+	main_title = content.querySelector(".sublist > .title.green");
+	persistent_title = checklist_layout_get_persistent_title(content);
+	if(!main_title) {
+		if(persistent_title) { persistent_title.style.display = "none"; }
+		checklist_layout_update_top_chrome_offset();
+		return;
+	}
+
+	if(!main_title.dataset.baseTitle || main_title.dataset.baseTitle === "") {
+		normalized_title = main_title.textContent.trim().replace(/\s-\s\d+\/\d+$/, "");
+		main_title.dataset.baseTitle = normalized_title;
+	}
+	base_title = main_title.dataset.baseTitle;
+
+	if(!checklist_layout_is_two_column_desktop()) {
+		main_title.textContent = base_title;
+		main_title.style.display = "none";
+		if(persistent_title) {
+			persistent_title.textContent = base_title;
+			persistent_title.style.display = "block";
+		}
+		checklist_layout_update_top_chrome_offset();
+		return;
+	}
+
+	page_info = checklist_layout_current_page(content);
+	main_title.style.display = "none";
+	if(persistent_title) {
+		persistent_title.textContent = base_title + " - " + page_info.current + "/" + page_info.total;
+		persistent_title.style.display = "block";
+	}
+	checklist_layout_update_top_chrome_offset();
+}
+
+function checklist_layout_update_page_indicators() {
+	checklist_layout_update_pagination_indicator();
+}
+
+function checklist_single_page_scroller() {
+	return null;
+}
+
+function checklist_scroll_to_element(target) {
+	let content = checklist_single_page_scroller();
+	let content_rect;
+	let target_rect;
+	let next_top;
+
+	if(content) {
+		content_rect = content.getBoundingClientRect();
+		target_rect = target.getBoundingClientRect();
+		next_top = content.scrollTop + (target_rect.top - content_rect.top) - 10;
+		if(next_top < 0) { next_top = 0; }
+		content.scroll({ top: next_top, behavior: "smooth" });
+		return;
+	}
+
+	window.scroll({top: target.getBoundingClientRect().top - 10 + window.scrollY, behavior: "smooth"});
+}
+
+function checklist_layout_wheel_scroll(event) {
+	let content = document.getElementById("content");
+	let page_width;
+	let max_left;
+	let current_page;
+	let target_left;
+	let direction;
+
+	if(!content || !checklist_layout_is_two_column_desktop()) { return; }
+	if(event.ctrlKey || event.deltaY === 0) { return; }
+	if(Math.abs(event.deltaY) < Math.abs(event.deltaX)) { return; }
+
+	event.preventDefault();
+	if(checklist_layout_wheel_lock) { return; }
+
+	page_width = Math.max(content.clientWidth, 1);
+	max_left = content.scrollWidth - content.clientWidth;
+	if(max_left <= 0) { return; }
+
+	direction = event.deltaY > 0 ? 1 : -1;
+	current_page = Math.round(content.scrollLeft / page_width);
+	target_left = (current_page + direction) * page_width;
+
+	if(target_left < 0) { target_left = 0; }
+	if(target_left > max_left) { target_left = max_left; }
+	if(target_left == content.scrollLeft) { return; }
+
+	checklist_layout_wheel_lock = true;
+	content.scrollTo({ left: target_left, behavior: "smooth" });
+	window.setTimeout(function() { checklist_layout_wheel_lock = false; }, 280);
+}
+
+function checklist_layout_set_viewport_height() {
+	let content = document.getElementById("content");
+	let computed_style;
+	let padding_bottom = 0;
+	let rect;
+	let available_height;
+
+	if(!content) { return 0; }
+	if(checklist_layout_mode != "two" || window.matchMedia("(max-width: 999px)").matches) {
+		content.style.height = "";
+		content.style.maxHeight = "";
+		return 0;
+	}
+
+	computed_style = window.getComputedStyle(content);
+	padding_bottom = parseFloat(computed_style.paddingBottom) || 0;
+	rect = content.getBoundingClientRect();
+	available_height = Math.floor(window.innerHeight - rect.top - padding_bottom);
+
+	if(available_height < 200) { available_height = 200; }
+	content.style.height = available_height + "px";
+	content.style.maxHeight = available_height + "px";
+	return available_height;
+}
+
+function checklist_layout_mark_oversized_sections(column_height) {
+	let content = document.getElementById("content");
+	let sections;
+	let effective_height = 0;
+
+	if(!content) { return; }
+	sections = Array.from(content.getElementsByClassName("sublist"));
+
+	if(checklist_layout_mode != "two" || window.matchMedia("(max-width: 999px)").matches) {
+		sections.forEach(function(section) { section.classList.remove("oversized"); });
+		return;
+	}
+
+	effective_height = column_height || content.clientHeight;
+	if(effective_height <= 0) { return; }
+	sections.forEach(function(section) {
+		section.classList.toggle("oversized", section.scrollHeight > effective_height);
+	});
+}
+
+function checklist_layout_handle_resize() {
+	let column_height = checklist_layout_set_viewport_height();
+	checklist_layout_mark_oversized_sections(column_height);
+	checklist_layout_update_top_chrome_offset();
+	checklist_sidebar_align();
+	checklist_layout_update_page_indicators();
+}
 
 function checklist_layout_apply() {
 	let content = document.getElementById("content");
@@ -21,6 +240,10 @@ function checklist_layout_apply() {
 	if(checklist_layout_mode == "two") { layout_icon = "layout-two"; }
 
 	content.classList.toggle("two-column-layout", checklist_layout_mode == "two");
+	if(document.body) {
+		document.body.classList.toggle("single-page-view", checklist_layout_mode == "one");
+	}
+	checklist_layout_handle_resize();
 	sessionStorage.setItem("checklist_layout", checklist_layout_mode);
 
 	layout_buttons = document.querySelectorAll('.layout_icon');
@@ -28,7 +251,6 @@ function checklist_layout_apply() {
 		btn.setAttribute("icon", layout_icon);
 		btn.innerHTML = iconRender(layout_icon);
 	});
-	checklist_sidebar_align();
 }
 
 function checklist_layout_switch() {
@@ -42,6 +264,7 @@ function checklist_layout_switch() {
 
 function checklist_layout_load() {
 	let layout_buttons;
+	let content = document.getElementById("content");
 
 	if(sessionStorage.getItem("checklist_layout") !== null) {
 		checklist_layout_mode = sessionStorage.getItem("checklist_layout");
@@ -52,6 +275,18 @@ function checklist_layout_load() {
 		layout_buttons = document.querySelectorAll('.layout_switch');
 		layout_buttons.forEach(function(btn) { btn.addEventListener('click', checklist_layout_switch, false); });
 		checklist_layout_listeners = true;
+	}
+	if(!checklist_layout_resize_listener) {
+		window.addEventListener("resize", checklist_layout_handle_resize);
+		checklist_layout_resize_listener = true;
+	}
+	if(!checklist_layout_wheel_listener && content) {
+		content.addEventListener("wheel", checklist_layout_wheel_scroll, { passive: false });
+		checklist_layout_wheel_listener = true;
+	}
+	if(!checklist_layout_scroll_listener && content) {
+		content.addEventListener("scroll", checklist_layout_update_page_indicators, false);
+		checklist_layout_scroll_listener = true;
 	}
 
 	checklist_layout_apply();
@@ -68,12 +303,11 @@ function checklist_heading_id(title, id_cache) {
 	return base_id + "-" + id_cache[base_id];
 }
 
-let checklist_sidebar_resize_listener = false;
-
 function checklist_sidebar_align() {
 	let sidebar = document.getElementById("checklist_sidebar");
 	let content = document.getElementById("content");
 	let first_section_heading;
+	let is_single_page = checklist_layout_mode == "one" && document.body && document.body.classList.contains("single-page-view");
 	let sidebar_width = 220;
 	let sidebar_gap = 20;
 	let top_offset = 10;
@@ -90,9 +324,13 @@ function checklist_sidebar_align() {
 		return;
 	}
 
-	first_section_heading = content.querySelector('.sublist > .title:not(.green):not(.blue)');
-	if(first_section_heading) {
-		top_offset = Math.round(first_section_heading.getBoundingClientRect().top);
+	if(is_single_page) {
+		top_offset = Math.round(content.getBoundingClientRect().top);
+	} else {
+		first_section_heading = content.querySelector('.sublist > .title:not(.green):not(.blue)');
+		if(first_section_heading) {
+			top_offset = Math.round(first_section_heading.getBoundingClientRect().top);
+		}
 	}
 	if(top_offset < 10) { top_offset = 10; }
 
@@ -141,21 +379,29 @@ function checklist_sidebar_build() {
 		link.setAttribute("mode", current_mode);
 		link.href = "#" + heading.id;
 		link.textContent = heading.textContent;
+		link.addEventListener("click", function(event) {
+			if(!checklist_layout_is_two_column_desktop()) { return; }
+			event.preventDefault();
+			heading.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "start" });
+			if(window.history && window.history.replaceState) {
+				window.history.replaceState(null, "", "#" + heading.id);
+			} else {
+				window.location.hash = heading.id;
+			}
+		});
 		links_el.appendChild(link);
 	});
 
 	sidebar.appendChild(links_el);
-	checklist_sidebar_align();
-
-	if(!checklist_sidebar_resize_listener) {
-		window.addEventListener("resize", checklist_sidebar_align);
-		checklist_sidebar_resize_listener = true;
-	}
+	checklist_layout_handle_resize();
 }
 
 function checklist_item_cross() {
 	let itemsList = document.getElementsByClassName('items');
 	let isDone = this.classList.contains('items-done');
+	let content = checklist_single_page_scroller();
+	let content_rect;
+	let scroll_trigger;
 	
 	// Clear all highlights
 	Array.from(itemsList).forEach(item => item.classList.remove('highlight'));
@@ -170,8 +416,14 @@ function checklist_item_cross() {
 	}
 	
 	// Scroll if needed
-	if(this.getBoundingClientRect().top > screen.height * 0.65) {
-		window.scroll({top: this.getBoundingClientRect().top - 10 + window.scrollY, behavior: 'smooth'});
+	if(content) {
+		content_rect = content.getBoundingClientRect();
+		scroll_trigger = content_rect.top + (content.clientHeight * 0.65);
+		if(this.getBoundingClientRect().top > scroll_trigger) {
+			checklist_scroll_to_element(this);
+		}
+	} else if(this.getBoundingClientRect().top > screen.height * 0.65) {
+		checklist_scroll_to_element(this);
 	}
 	
 	// Highlight next item
@@ -207,7 +459,7 @@ function checklist_subcheckcross(event) {
 	
 	// Scroll to appropriate position
 	let scrollTarget = shouldMarkDone ? items[items.length - 1] : items[0];
-	window.scroll({top: scrollTarget.getBoundingClientRect().top - 10 + window.scrollY, behavior: 'smooth'});
+	checklist_scroll_to_element(scrollTarget);
 	
 	// Highlight first unchecked item
 	let allItems = document.querySelectorAll('.item');

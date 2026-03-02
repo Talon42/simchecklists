@@ -18,6 +18,7 @@
 	--light_txt_purple:#4b0188;
 	--light_strike:#000000;
 	--bar_bg_color:#272822;
+	--single-page-top-offset:0px;
 	--font:url('font.otf');
 }
 
@@ -42,6 +43,16 @@ a { text-decoration:none; }
 	
 .icons { display:flex; }
 .icons div { cursor:pointer; }
+
+#checklist_top_chrome {
+	width:100%;
+	padding-top:60px;
+}
+
+#checklist_top_chrome_inner {
+	width:min(600px, 90vw);
+	margin:0 auto;
+}
 
 .logo { 
 	width: 100%;
@@ -100,6 +111,15 @@ a { text-decoration:none; }
 	overflow-wrap:anywhere;
 }
 
+.checklist-persistent-title {
+	display:none;
+	margin-top:0;
+	margin-bottom:10px;
+	text-align:center;
+	padding-top:20px;
+	padding-bottom:20px;
+}
+
 .checklist-shell .content {
 	max-width:none;
 }
@@ -116,11 +136,26 @@ a { text-decoration:none; }
 	max-width:1200px;
 	column-count:2;
 	column-gap:20px;
+	column-fill:auto;
+	height:calc(100vh - 40px);
+	max-height:calc(100vh - 40px);
+	height:calc(100dvh - 40px);
+	max-height:calc(100dvh - 40px);
+	overflow-x:hidden;
+	overflow-y:hidden;
+	overscroll-behavior-x:contain;
 }
 
-.content.two-column-layout .sublist {
+#content.two-column-layout > .sublist {
+	break-inside:avoid-column;
+	-webkit-column-break-inside:avoid;
+	page-break-inside:avoid;
+}
+
+#content.two-column-layout > .sublist.oversized {
 	break-inside:auto;
 	-webkit-column-break-inside:auto;
+	page-break-inside:auto;
 }
 
 .content.two-column-layout .title,
@@ -143,6 +178,7 @@ a { text-decoration:none; }
 
 .title.green {
 	margin-bottom:20px;
+	text-align:center;
 }
 	
 .icao-window { 
@@ -409,11 +445,35 @@ a[mode="light"] { color:var(--light_txt_green); }
 	.content.two-column-layout {
 		max-width:600px;
 		column-count:1;
+		height:auto;
+		max-height:none;
+		overflow-x:visible;
+		overflow-y:visible;
 	}
 }
 	
 @media screen and (min-width:1000px) { 
 	.icons { 
 		justify-content:space-between;
+	}
+	body.single-page-view #checklist_top_chrome {
+		position:fixed;
+		top:0;
+		left:0;
+		right:0;
+		z-index:60;
+	}
+	body.single-page-view #checklist_top_chrome_inner {
+		padding-top:10px;
+		padding-bottom:8px;
+	}
+	body.single-page-view .main-container {
+		padding-top:150px;
+	}
+	body.single-page-view[mode="dark"] #checklist_top_chrome {
+		background-color:var(--dark_bg_color);
+	}
+	body.single-page-view[mode="light"] #checklist_top_chrome {
+		background-color:var(--light_bg_color);
 	}
 }	
