@@ -17,6 +17,9 @@ let checklist_layout_scroll_listener = false;
 let checklist_layout_wheel_lock = false;
 let checklist_mobile_icons_listener = false;
 let checklist_layout_snap_timer = null;
+let checklist_design_mode = "legacy";
+let checklist_design_listeners = false;
+
 
 function checklist_mobile_icons_set_label(expanded) {
 	let toggle = document.getElementById("icons_mobile_toggle");
@@ -399,6 +402,56 @@ function checklist_layout_load() {
 	checklist_layout_apply();
 }
 
+function checklist_design_apply() {
+	let design_buttons;
+	let design_icon;
+	let design_title;
+
+	if(document.body) {
+		document.body.classList.toggle("modern-design", checklist_design_mode == "modern");
+		document.body.classList.toggle("legacy-design", checklist_design_mode == "legacy");
+	}
+
+	design_icon = checklist_design_mode == "modern" ? "ui-modern" : "ui-legacy";
+	design_title = checklist_design_mode == "modern" ? "Switch to legacy design" : "Switch to modern design";
+	design_buttons = document.querySelectorAll('.design_switch');
+	design_buttons.forEach(function(btn) {
+		btn.setAttribute("title", design_title);
+	});
+
+	document.querySelectorAll('.design_icon').forEach(function(btn) {
+		btn.setAttribute("icon", design_icon);
+		btn.innerHTML = iconRender(design_icon);
+	});
+	sessionStorage.setItem("checklist_design", checklist_design_mode);
+}
+
+function checklist_design_switch() {
+	if(checklist_design_mode == "legacy") {
+		checklist_design_mode = "modern";
+	} else {
+		checklist_design_mode = "legacy";
+	}
+	checklist_design_apply();
+}
+
+function checklist_design_load() {
+	let design_buttons;
+
+	if(sessionStorage.getItem("checklist_design") !== null) {
+		checklist_design_mode = sessionStorage.getItem("checklist_design");
+	}
+	if(checklist_design_mode !== "modern") { checklist_design_mode = "legacy"; }
+
+	if(!checklist_design_listeners) {
+		design_buttons = document.querySelectorAll('.design_switch');
+		design_buttons.forEach(function(btn) { btn.addEventListener('click', checklist_design_switch, false); });
+		checklist_design_listeners = true;
+	}
+
+	checklist_design_apply();
+}
+
 function checklist_heading_id(title, id_cache) {
 	let base_id = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 	if(base_id == "") { base_id = "section"; }
@@ -690,6 +743,7 @@ function checklist_process() {
 
 	checklist_mobile_icons_init();
 	checklist_layout_load();
+	checklist_design_load();
 }
 
 async function checklist_load_file(checklist_file) { 
@@ -742,6 +796,7 @@ function checklist_load_items(array) {
 			contentHTML += '<div class="items">';
 			contentHTML += '<div class="strike" mode="dark"></div>';
 			contentHTML += '<div class="item" mode="dark">' + line_array[0] +  '</div>';
+			contentHTML += '<div class="item-dots" aria-hidden="true"></div>';
 			contentHTML += '<div class="state"mode="dark">'+ line_array[1] + '</div></div>';
 
 		}

@@ -228,6 +228,11 @@ body.two-column-view .checklist-shell {
 	overflow:hidden;
 }
 
+body.modern-design .content.two-column-layout .items {
+	grid-template-columns:minmax(0, auto) minmax(0, 1fr) auto;
+	column-gap:0;
+}
+
 .content.two-column-layout .item,
 .content.two-column-layout .state {
 	min-width:0;
@@ -386,6 +391,25 @@ body.two-column-view .checklist-shell {
 	display:flex; 
 	justify-content:space-between;
 	padding:5px 10px 5px 10px;
+}
+
+.item-dots {
+	display:none;
+	flex:1;
+	overflow:hidden;
+	white-space:nowrap;
+}
+
+.item-dots::before {
+	content:"................................................................................................................................................................................................";
+}
+
+body.modern-design .items {
+	gap:0;
+}
+
+body.modern-design .item-dots {
+	display:block;
 }
 
 .comment { 
