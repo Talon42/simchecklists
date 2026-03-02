@@ -61,22 +61,42 @@ function checklist_layout_current_page(content) {
 	let computed_style;
 	let page_gap = 0;
 	let page_stride;
+	let max_left;
+	let page_starts = [0];
+	let next_start;
 	let total_pages;
-	let current_page;
+	let current_page = 1;
+	let current_index = 0;
+	let min_distance = Number.POSITIVE_INFINITY;
 
 	if(!content || content.clientWidth <= 0) {
-		return { current: 1, total: 1, width: 0, gap: 0, stride: 0, start: 0, end: 0 };
+		return { current: 1, total: 1, width: 0, gap: 0, stride: 0, start: 0, end: 0, max: 0, starts: [0], index: 0 };
 	}
 	page_width = content.clientWidth;
 	computed_style = window.getComputedStyle(content);
 	page_gap = parseFloat(computed_style.columnGap) || 0;
 	page_stride = page_width + page_gap;
 	if(page_stride <= 0) { page_stride = page_width; }
+	max_left = Math.max(0, content.scrollWidth - content.clientWidth);
 
-	total_pages = Math.max(1, Math.round((content.scrollWidth + page_gap) / page_stride));
-	current_page = Math.round(content.scrollLeft / page_stride) + 1;
-	if(current_page < 1) { current_page = 1; }
-	if(current_page > total_pages) { current_page = total_pages; }
+	next_start = page_stride;
+	while(next_start < max_left - 1) {
+		page_starts.push(next_start);
+		next_start += page_stride;
+	}
+	if(max_left > 0 && Math.abs(page_starts[page_starts.length - 1] - max_left) > 1) {
+		page_starts.push(max_left);
+	}
+
+	total_pages = page_starts.length;
+	page_starts.forEach(function(start, index) {
+		let distance = Math.abs(content.scrollLeft - start);
+		if(distance < min_distance) {
+			min_distance = distance;
+			current_index = index;
+		}
+	});
+	current_page = current_index + 1;
 
 	return {
 		current: current_page,
@@ -84,8 +104,11 @@ function checklist_layout_current_page(content) {
 		width: page_width,
 		gap: page_gap,
 		stride: page_stride,
-		start: (current_page - 1) * page_stride,
-		end: ((current_page - 1) * page_stride) + page_width
+		start: page_starts[current_index],
+		end: page_starts[current_index] + page_width,
+		max: max_left,
+		starts: page_starts,
+		index: current_index
 	};
 }
 
@@ -224,9 +247,7 @@ function checklist_scroll_to_element(target) {
 function checklist_layout_wheel_scroll(event) {
 	let content = document.getElementById("content");
 	let page_info;
-	let page_stride;
-	let max_left;
-	let current_page;
+	let target_index;
 	let target_left;
 	let direction;
 
@@ -238,16 +259,13 @@ function checklist_layout_wheel_scroll(event) {
 	if(checklist_layout_wheel_lock) { return; }
 
 	page_info = checklist_layout_current_page(content);
-	page_stride = Math.max(page_info.stride, 1);
-	max_left = content.scrollWidth - content.clientWidth;
-	if(max_left <= 0) { return; }
+	if(page_info.starts.length <= 1) { return; }
 
 	direction = event.deltaY > 0 ? 1 : -1;
-	current_page = Math.round(content.scrollLeft / page_stride);
-	target_left = (current_page + direction) * page_stride;
-
-	if(target_left < 0) { target_left = 0; }
-	if(target_left > max_left) { target_left = max_left; }
+	target_index = page_info.index + direction;
+	if(target_index < 0) { target_index = 0; }
+	if(target_index >= page_info.starts.length) { target_index = page_info.starts.length - 1; }
+	target_left = page_info.starts[target_index];
 	if(target_left == content.scrollLeft) { return; }
 
 	checklist_layout_wheel_lock = true;
@@ -470,47 +488,49 @@ function checklist_sidebar_build() {
 
 function checklist_sidebar_focus_section(section_id) {
 	let content = document.getElementById("content");
-	let all_sections;
-	let intro_sections;
-	let body_sections;
-	let outro_sections;
-	let focus_index;
-	let rotated_sections;
-	let next_order;
+	let heading;
+	let target;
+	let page_info;
+	let content_rect;
+	let target_rect;
+	let target_left;
+	let target_anchor;
+	let target_index = 0;
+	let i;
 
 	if(!content || !section_id) { return; }
+	heading = document.getElementById(section_id);
+	if(!heading || !content.contains(heading)) { return; }
+	target = heading.closest(".sublist") || heading;
 
-	all_sections = Array.from(content.querySelectorAll(".sublist"));
-	if(all_sections.length === 0) { return; }
+	if(!checklist_layout_is_two_column_desktop()) {
+		checklist_scroll_to_element(target);
+		checklist_layout_update_page_indicators();
+		return;
+	}
 
-	intro_sections = all_sections.filter(function(section) {
-		let title = section.querySelector(":scope > .title");
-		return title && title.classList.contains("green");
-	});
-	body_sections = all_sections.filter(function(section) {
-		let title = section.querySelector(":scope > .title");
-		return title && !title.classList.contains("green") && !title.classList.contains("blue");
-	});
-	outro_sections = all_sections.filter(function(section) {
-		let title = section.querySelector(":scope > .title");
-		return title && title.classList.contains("blue");
-	});
+	page_info = checklist_layout_current_page(content);
+	if(page_info.starts.length <= 1) {
+		content.scrollTo({ left: 0, behavior: "smooth" });
+		checklist_layout_update_page_indicators();
+		return;
+	}
 
-	focus_index = body_sections.findIndex(function(section) {
-		let title = section.querySelector(":scope > .title");
-		return title && title.id == section_id;
-	});
-	if(focus_index < 0) { return; }
+	content_rect = content.getBoundingClientRect();
+	target_rect = target.getBoundingClientRect();
+	target_left = content.scrollLeft + (target_rect.left - content_rect.left);
+	target_anchor = target_left + (Math.max(1, target_rect.width) / 2);
 
-	rotated_sections = body_sections.slice(focus_index).concat(body_sections.slice(0, focus_index));
-	next_order = intro_sections.concat(rotated_sections).concat(outro_sections);
-	next_order.forEach(function(section) { content.appendChild(section); });
+	for(i = 0; i < page_info.starts.length; i++) {
+		if(target_anchor >= page_info.starts[i]) {
+			target_index = i;
+		} else {
+			break;
+		}
+	}
 
-	content.scrollLeft = 0;
-	content.scrollTop = 0;
-	checklist_layout_snap_to_page();
+	content.scrollTo({ left: page_info.starts[target_index], behavior: "smooth" });
 	checklist_layout_update_page_indicators();
-	checklist_sidebar_update_section_completion();
 }
 
 function checklist_sidebar_update_section_completion() {
