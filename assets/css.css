@@ -427,6 +427,10 @@ body.modern-design .item-dots {
 	display:block;
 }
 
+body.single-page-view.modern-design .item-dots {
+	margin-right:8px;
+}
+
 .comment { 
 	padding:0px 0px 0px 30px;
 }
