@@ -71,7 +71,7 @@ function checklist_layout_update_top_chrome_offset() {
 	let offset = 0;
 
 	if(!root) { return; }
-	if(chrome && checklist_layout_mode == "one" && window.matchMedia("(min-width: 1000px)").matches) {
+	if(chrome && window.matchMedia("(min-width: 1000px)").matches) {
 		offset = Math.ceil(chrome.getBoundingClientRect().height);
 	}
 	root.style.setProperty("--single-page-top-offset", offset + "px");
@@ -306,8 +306,6 @@ function checklist_heading_id(title, id_cache) {
 function checklist_sidebar_align() {
 	let sidebar = document.getElementById("checklist_sidebar");
 	let content = document.getElementById("content");
-	let first_section_heading;
-	let is_single_page = checklist_layout_mode == "one" && document.body && document.body.classList.contains("single-page-view");
 	let sidebar_width = 220;
 	let sidebar_gap = 20;
 	let top_offset = 10;
@@ -324,14 +322,7 @@ function checklist_sidebar_align() {
 		return;
 	}
 
-	if(is_single_page) {
-		top_offset = Math.round(content.getBoundingClientRect().top);
-	} else {
-		first_section_heading = content.querySelector('.sublist > .title:not(.green):not(.blue)');
-		if(first_section_heading) {
-			top_offset = Math.round(first_section_heading.getBoundingClientRect().top);
-		}
-	}
+	top_offset = Math.round(content.getBoundingClientRect().top);
 	if(top_offset < 10) { top_offset = 10; }
 
 	left_offset = content.getBoundingClientRect().left - sidebar_width - sidebar_gap;
