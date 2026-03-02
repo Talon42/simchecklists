@@ -16,6 +16,7 @@ let checklist_layout_wheel_listener = false;
 let checklist_layout_scroll_listener = false;
 let checklist_layout_wheel_lock = false;
 let checklist_mobile_icons_listener = false;
+let checklist_layout_snap_timer = null;
 
 function checklist_mobile_icons_set_label(expanded) {
 	let toggle = document.getElementById("icons_mobile_toggle");
@@ -57,15 +58,23 @@ function checklist_layout_is_two_column_desktop() {
 
 function checklist_layout_current_page(content) {
 	let page_width;
+	let computed_style;
+	let page_gap = 0;
+	let page_stride;
 	let total_pages;
 	let current_page;
 
 	if(!content || content.clientWidth <= 0) {
-		return { current: 1, total: 1, width: 0, start: 0, end: 0 };
+		return { current: 1, total: 1, width: 0, gap: 0, stride: 0, start: 0, end: 0 };
 	}
 	page_width = content.clientWidth;
-	total_pages = Math.max(1, Math.ceil(content.scrollWidth / page_width));
-	current_page = Math.round(content.scrollLeft / page_width) + 1;
+	computed_style = window.getComputedStyle(content);
+	page_gap = parseFloat(computed_style.columnGap) || 0;
+	page_stride = page_width + page_gap;
+	if(page_stride <= 0) { page_stride = page_width; }
+
+	total_pages = Math.max(1, Math.round((content.scrollWidth + page_gap) / page_stride));
+	current_page = Math.round(content.scrollLeft / page_stride) + 1;
 	if(current_page < 1) { current_page = 1; }
 	if(current_page > total_pages) { current_page = total_pages; }
 
@@ -73,8 +82,10 @@ function checklist_layout_current_page(content) {
 		current: current_page,
 		total: total_pages,
 		width: page_width,
-		start: (current_page - 1) * page_width,
-		end: current_page * page_width
+		gap: page_gap,
+		stride: page_stride,
+		start: (current_page - 1) * page_stride,
+		end: ((current_page - 1) * page_stride) + page_width
 	};
 }
 
@@ -159,6 +170,35 @@ function checklist_layout_update_page_indicators() {
 	checklist_layout_update_pagination_indicator();
 }
 
+function checklist_layout_snap_to_page() {
+	let content = document.getElementById("content");
+	let page_info;
+	let target_left;
+
+	if(!content || !checklist_layout_is_two_column_desktop()) { return; }
+	page_info = checklist_layout_current_page(content);
+	if(page_info.width <= 0) { return; }
+
+	target_left = page_info.start;
+	if(Math.abs(content.scrollLeft - target_left) <= 1) { return; }
+	content.scrollTo({ left: target_left, behavior: "auto" });
+}
+
+function checklist_layout_schedule_snap() {
+	if(checklist_layout_snap_timer) {
+		window.clearTimeout(checklist_layout_snap_timer);
+	}
+	checklist_layout_snap_timer = window.setTimeout(function() {
+		checklist_layout_snap_to_page();
+		checklist_layout_update_page_indicators();
+	}, 140);
+}
+
+function checklist_layout_handle_scroll() {
+	checklist_layout_update_page_indicators();
+	checklist_layout_schedule_snap();
+}
+
 function checklist_single_page_scroller() {
 	return null;
 }
@@ -183,7 +223,8 @@ function checklist_scroll_to_element(target) {
 
 function checklist_layout_wheel_scroll(event) {
 	let content = document.getElementById("content");
-	let page_width;
+	let page_info;
+	let page_stride;
 	let max_left;
 	let current_page;
 	let target_left;
@@ -196,13 +237,14 @@ function checklist_layout_wheel_scroll(event) {
 	event.preventDefault();
 	if(checklist_layout_wheel_lock) { return; }
 
-	page_width = Math.max(content.clientWidth, 1);
+	page_info = checklist_layout_current_page(content);
+	page_stride = Math.max(page_info.stride, 1);
 	max_left = content.scrollWidth - content.clientWidth;
 	if(max_left <= 0) { return; }
 
 	direction = event.deltaY > 0 ? 1 : -1;
-	current_page = Math.round(content.scrollLeft / page_width);
-	target_left = (current_page + direction) * page_width;
+	current_page = Math.round(content.scrollLeft / page_stride);
+	target_left = (current_page + direction) * page_stride;
 
 	if(target_left < 0) { target_left = 0; }
 	if(target_left > max_left) { target_left = max_left; }
@@ -215,8 +257,11 @@ function checklist_layout_wheel_scroll(event) {
 
 function checklist_layout_set_viewport_height() {
 	let content = document.getElementById("content");
+	let root = document.documentElement;
+	let footer = document.querySelector(".footer");
 	let computed_style;
 	let padding_bottom = 0;
+	let footer_offset = 0;
 	let rect;
 	let available_height;
 
@@ -224,13 +269,20 @@ function checklist_layout_set_viewport_height() {
 	if(checklist_layout_mode != "two") {
 		content.style.height = "";
 		content.style.maxHeight = "";
+		if(root) { root.style.setProperty("--two-column-footer-offset", "0px"); }
 		return 0;
 	}
 
 	computed_style = window.getComputedStyle(content);
 	padding_bottom = parseFloat(computed_style.paddingBottom) || 0;
+	if(document.body && document.body.classList.contains("two-column-view") && footer) {
+		footer_offset = Math.ceil(footer.getBoundingClientRect().height) + 12;
+	}
+	if(root) {
+		root.style.setProperty("--two-column-footer-offset", footer_offset + "px");
+	}
 	rect = content.getBoundingClientRect();
-	available_height = Math.floor(window.innerHeight - rect.top - padding_bottom);
+	available_height = Math.floor(window.innerHeight - rect.top - padding_bottom - footer_offset);
 
 	if(available_height < 200) { available_height = 200; }
 	content.style.height = available_height + "px";
@@ -261,6 +313,7 @@ function checklist_layout_mark_oversized_sections(column_height) {
 function checklist_layout_handle_resize() {
 	let column_height = checklist_layout_set_viewport_height();
 	checklist_layout_mark_oversized_sections(column_height);
+	checklist_layout_snap_to_page();
 	checklist_layout_update_top_chrome_offset();
 	checklist_sidebar_align();
 	checklist_layout_update_page_indicators();
@@ -277,6 +330,7 @@ function checklist_layout_apply() {
 	content.classList.toggle("two-column-layout", checklist_layout_mode == "two");
 	if(document.body) {
 		document.body.classList.toggle("single-page-view", checklist_layout_mode == "one");
+		document.body.classList.toggle("two-column-view", checklist_layout_mode == "two");
 	}
 	checklist_layout_handle_resize();
 	sessionStorage.setItem("checklist_layout", checklist_layout_mode);
@@ -320,7 +374,7 @@ function checklist_layout_load() {
 		checklist_layout_wheel_listener = true;
 	}
 	if(!checklist_layout_scroll_listener && content) {
-		content.addEventListener("scroll", checklist_layout_update_page_indicators, false);
+		content.addEventListener("scroll", checklist_layout_handle_scroll, false);
 		checklist_layout_scroll_listener = true;
 	}
 
