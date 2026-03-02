@@ -85,15 +85,13 @@ a { text-decoration:none; }
 }
 
 body.two-column-view {
-	height:100vh;
-	height:100dvh;
-	overflow:hidden;
+	height:auto;
+	overflow:auto;
 }
 
 body.two-column-view .main-container {
-	height:100vh;
-	height:100dvh;
-	overflow:hidden;
+	height:auto;
+	overflow:visible;
 	padding-left:5%;
 	padding-right:5%;
 	padding-bottom:0;
@@ -105,10 +103,7 @@ body.two-column-view .spacer {
 
 body.two-column-view .footer {
 	display:block;
-	position:fixed;
-	left:0;
-	right:0;
-	bottom:6px;
+	position:static;
 	padding-top:0;
 	text-align:center;
 	z-index:70;
@@ -192,12 +187,8 @@ body.two-column-view .checklist-shell {
 	column-count:2;
 	column-gap:20px;
 	column-fill:auto;
-	height:calc(100vh - 40px);
-	max-height:calc(100vh - 40px);
-	height:calc(100dvh - 40px);
-	max-height:calc(100dvh - 40px);
-	overflow-x:hidden;
-	overflow-y:hidden;
+	overflow-x:auto;
+	overflow-y:auto;
 	overscroll-behavior-x:contain;
 }
 
@@ -549,7 +540,7 @@ body[mode="light"] #checklist_top_chrome {
 @media screen and (max-width:1279px) {
 	.main-container {
 		width:100%;
-		transform:scale(calc(100vw / 1280));
+		transform:none;
 	}
 	.checklist-sidebar {
 		display:none;
@@ -558,8 +549,8 @@ body[mode="light"] #checklist_top_chrome {
 
 @media screen and (max-width:479px) {
 	.main-container {
-		width:480px;
-		transform:scale(calc(100vw / 480));
+		width:100%;
+		transform:none;
 		padding-top:50px;
 	}
 	.content {
@@ -607,5 +598,35 @@ body[mode="light"] #checklist_top_chrome {
 		background-color:var(--light_bg_highlight);
 		color:var(--light_txt_color);
 		border-color:var(--light_txt_green);
+	}
+}
+
+@media screen and (min-width:1280px) {
+	body.two-column-view {
+		height:100vh;
+		height:100dvh;
+		overflow:hidden;
+	}
+
+	body.two-column-view .main-container {
+		height:100vh;
+		height:100dvh;
+		overflow:hidden;
+	}
+
+	body.two-column-view .footer {
+		position:fixed;
+		left:0;
+		right:0;
+		bottom:6px;
+	}
+
+	.content.two-column-layout {
+		height:calc(100vh - 40px);
+		max-height:calc(100vh - 40px);
+		height:calc(100dvh - 40px);
+		max-height:calc(100dvh - 40px);
+		overflow-x:hidden;
+		overflow-y:hidden;
 	}
 }

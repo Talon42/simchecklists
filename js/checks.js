@@ -56,7 +56,7 @@ function checklist_mobile_icons_init() {
 }
 
 function checklist_layout_is_two_column_desktop() {
-	return checklist_layout_mode == "two";
+	return checklist_layout_mode == "two" && window.innerWidth >= 1280;
 }
 
 function checklist_layout_current_page(content) {
@@ -287,7 +287,7 @@ function checklist_layout_set_viewport_height() {
 	let available_height;
 
 	if(!content) { return 0; }
-	if(checklist_layout_mode != "two") {
+	if(!checklist_layout_is_two_column_desktop()) {
 		content.style.height = "";
 		content.style.maxHeight = "";
 		if(root) { root.style.setProperty("--two-column-footer-offset", "0px"); }
@@ -806,4 +806,3 @@ function checklist_load_items(array) {
 	checklist_process();
 	checklist_sidebar_build();
 }
-
