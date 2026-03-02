@@ -15,9 +15,44 @@ let checklist_layout_resize_listener = false;
 let checklist_layout_wheel_listener = false;
 let checklist_layout_scroll_listener = false;
 let checklist_layout_wheel_lock = false;
+let checklist_mobile_icons_listener = false;
+
+function checklist_mobile_icons_set_label(expanded) {
+	let toggle = document.getElementById("icons_mobile_toggle");
+	if(!toggle) { return; }
+	toggle.textContent = "";
+	toggle.setAttribute("aria-expanded", expanded ? "true" : "false");
+	toggle.setAttribute("aria-label", expanded ? "Hide tools" : "Show tools");
+	toggle.setAttribute("title", expanded ? "Hide tools" : "Show tools");
+}
+
+function checklist_mobile_icons_toggle() {
+	let chrome = document.getElementById("checklist_top_chrome");
+	let expanded;
+	if(!chrome) { return; }
+	expanded = chrome.classList.toggle("icons-expanded");
+	checklist_mobile_icons_set_label(expanded);
+}
+
+function checklist_mobile_icons_init() {
+	let toggle = document.getElementById("icons_mobile_toggle");
+	let chrome = document.getElementById("checklist_top_chrome");
+	if(!toggle || !chrome || checklist_mobile_icons_listener) { return; }
+
+	chrome.classList.remove("icons-expanded");
+	checklist_mobile_icons_set_label(false);
+	toggle.addEventListener("click", checklist_mobile_icons_toggle, false);
+	toggle.addEventListener("keydown", function(event) {
+		if(event.key == "Enter" || event.key == " ") {
+			event.preventDefault();
+			checklist_mobile_icons_toggle();
+		}
+	}, false);
+	checklist_mobile_icons_listener = true;
+}
 
 function checklist_layout_is_two_column_desktop() {
-	return checklist_layout_mode == "two" && !window.matchMedia("(max-width: 999px)").matches;
+	return checklist_layout_mode == "two";
 }
 
 function checklist_layout_current_page(content) {
@@ -71,7 +106,7 @@ function checklist_layout_update_top_chrome_offset() {
 	let offset = 0;
 
 	if(!root) { return; }
-	if(chrome && window.matchMedia("(min-width: 1000px)").matches) {
+	if(chrome) {
 		offset = Math.ceil(chrome.getBoundingClientRect().height);
 	}
 	root.style.setProperty("--single-page-top-offset", offset + "px");
@@ -186,7 +221,7 @@ function checklist_layout_set_viewport_height() {
 	let available_height;
 
 	if(!content) { return 0; }
-	if(checklist_layout_mode != "two" || window.matchMedia("(max-width: 999px)").matches) {
+	if(checklist_layout_mode != "two") {
 		content.style.height = "";
 		content.style.maxHeight = "";
 		return 0;
@@ -211,7 +246,7 @@ function checklist_layout_mark_oversized_sections(column_height) {
 	if(!content) { return; }
 	sections = Array.from(content.getElementsByClassName("sublist"));
 
-	if(checklist_layout_mode != "two" || window.matchMedia("(max-width: 999px)").matches) {
+	if(checklist_layout_mode != "two") {
 		sections.forEach(function(section) { section.classList.remove("oversized"); });
 		return;
 	}
@@ -312,15 +347,6 @@ function checklist_sidebar_align() {
 	let left_offset;
 
 	if(!sidebar || !content) { return; }
-	if(window.matchMedia("(max-width: 999px)").matches) {
-		sidebar.style.position = "";
-		sidebar.style.top = "";
-		sidebar.style.left = "";
-		sidebar.style.width = "";
-		sidebar.style.marginTop = "";
-		sidebar.style.maxHeight = "";
-		return;
-	}
 
 	top_offset = Math.round(content.getBoundingClientRect().top);
 	if(top_offset < 10) { top_offset = 10; }
@@ -538,6 +564,7 @@ function checklist_process() {
 
 	for (var i = 0; i < titlesList.length; i++) { titlesList[i].addEventListener('dblclick', checklist_subcheckcross, false); }
 
+	checklist_mobile_icons_init();
 	checklist_layout_load();
 }
 
