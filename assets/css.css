@@ -197,17 +197,12 @@ body.two-column-view .checklist-shell {
 	height:calc(100dvh - 40px);
 	max-height:calc(100dvh - 40px);
 	overflow-x:hidden;
-	overflow-y:hidden;
-	overscroll-behavior-x:contain;
+	overflow-y:hidden;	
+	overscroll-behavior:contain;
+	touch-action:none;
 }
 
 #content.two-column-layout > .sublist {
-	break-inside:avoid-column;
-	-webkit-column-break-inside:avoid;
-	page-break-inside:avoid;
-}
-
-#content.two-column-layout > .sublist.oversized {
 	break-inside:auto;
 	-webkit-column-break-inside:auto;
 	page-break-inside:auto;
@@ -388,9 +383,23 @@ body.modern-design .content.two-column-layout .items {
 		
 .items {
 	position:relative;
-	display:flex; 
-	justify-content:space-between;
+	display:grid;
+	grid-template-columns:minmax(0, 1fr) auto;
+	column-gap:12px;
+	align-items:start;
 	padding:5px 10px 5px 10px;
+}
+
+.item,
+.state {
+	min-width:0;
+	white-space:normal;
+	overflow-wrap:anywhere;
+	word-break:break-word;
+}
+
+.state {
+	text-align:right;
 }
 
 .item-dots {
@@ -405,11 +414,16 @@ body.modern-design .content.two-column-layout .items {
 }
 
 body.modern-design .items {
+	grid-template-columns:minmax(0, auto) minmax(0, 1fr) auto;
 	gap:0;
 }
 
 body.modern-design .item-dots {
 	display:block;
+}
+
+body.single-page-view.modern-design .item-dots {
+	margin-right:8px;
 }
 
 .comment { 
@@ -549,6 +563,9 @@ body[mode="light"] #checklist_top_chrome {
 @media screen and (max-width:1279px) {
 	.main-container {
 		width:100%;
+		transform:none;
+	}
+	body.two-column-view .main-container {
 		transform:scale(calc(100vw / 1280));
 	}
 	.checklist-sidebar {
