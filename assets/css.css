@@ -123,6 +123,8 @@ body.two-column-view .footer {
 .checklist-shell {
 	width:100%;
 	max-width:1100px;
+	/* Compensate when fixed top chrome becomes taller (persistent title). */
+	margin-top:max(0px, calc(var(--single-page-top-offset) - 150px));
 }
 
 body.two-column-view .checklist-shell {

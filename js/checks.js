@@ -452,9 +452,8 @@ function checklist_sidebar_build() {
 		link.href = "#" + heading.id;
 		link.textContent = heading.textContent;
 		link.addEventListener("click", function(event) {
-			if(!checklist_layout_is_two_column_desktop()) { return; }
 			event.preventDefault();
-			heading.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "start" });
+			checklist_sidebar_focus_section(heading.id);
 			if(window.history && window.history.replaceState) {
 				window.history.replaceState(null, "", "#" + heading.id);
 			} else {
@@ -467,6 +466,51 @@ function checklist_sidebar_build() {
 	sidebar.appendChild(links_el);
 	checklist_sidebar_update_section_completion();
 	checklist_layout_handle_resize();
+}
+
+function checklist_sidebar_focus_section(section_id) {
+	let content = document.getElementById("content");
+	let all_sections;
+	let intro_sections;
+	let body_sections;
+	let outro_sections;
+	let focus_index;
+	let rotated_sections;
+	let next_order;
+
+	if(!content || !section_id) { return; }
+
+	all_sections = Array.from(content.querySelectorAll(".sublist"));
+	if(all_sections.length === 0) { return; }
+
+	intro_sections = all_sections.filter(function(section) {
+		let title = section.querySelector(":scope > .title");
+		return title && title.classList.contains("green");
+	});
+	body_sections = all_sections.filter(function(section) {
+		let title = section.querySelector(":scope > .title");
+		return title && !title.classList.contains("green") && !title.classList.contains("blue");
+	});
+	outro_sections = all_sections.filter(function(section) {
+		let title = section.querySelector(":scope > .title");
+		return title && title.classList.contains("blue");
+	});
+
+	focus_index = body_sections.findIndex(function(section) {
+		let title = section.querySelector(":scope > .title");
+		return title && title.id == section_id;
+	});
+	if(focus_index < 0) { return; }
+
+	rotated_sections = body_sections.slice(focus_index).concat(body_sections.slice(0, focus_index));
+	next_order = intro_sections.concat(rotated_sections).concat(outro_sections);
+	next_order.forEach(function(section) { content.appendChild(section); });
+
+	content.scrollLeft = 0;
+	content.scrollTop = 0;
+	checklist_layout_snap_to_page();
+	checklist_layout_update_page_indicators();
+	checklist_sidebar_update_section_completion();
 }
 
 function checklist_sidebar_update_section_completion() {
@@ -536,30 +580,21 @@ function checklist_item_cross() {
 	}
 }
 
-function checklist_subcheckcross(event) {
-	// Only trigger if double-clicking on the title itself, not child items
-	if(event.target.classList.contains('items') || event.target.closest('.items')) {
-		return;
-	}
-	
+function checklist_subcheckcross(section) {
 	// Get all item children
-	let items = Array.from(this.querySelectorAll('.items'));
+	let items = Array.from(section.querySelectorAll('.items'));
 	if(items.length === 0) return;
-	
+
 	// Determine if we should mark done (if ANY are unchecked)
 	let shouldMarkDone = items.some(item => !item.classList.contains('items-done'));
-	
+
 	// Toggle all items
 	items.forEach(item => {
 		item.classList.remove('highlight');
 		toggleItemState(item, shouldMarkDone);
 	});
 	checklist_sidebar_update_section_completion();
-	
-	// Scroll to appropriate position
-	let scrollTarget = shouldMarkDone ? items[items.length - 1] : items[0];
-	checklist_scroll_to_element(scrollTarget);
-	
+
 	// Highlight first unchecked item
 	let allItems = document.querySelectorAll('.item');
 	for(let item of allItems) {
@@ -568,6 +603,21 @@ function checklist_subcheckcross(event) {
 			break;
 		}
 	}
+}
+
+function checklist_section_cross(event) {
+	let title = event.currentTarget;
+	let section;
+
+	if(!title) { return; }
+	if(title.classList.contains("green") || title.classList.contains("blue")) { return; }
+	if(event.target.classList.contains('items') || event.target.closest('.items')) {
+		return;
+	}
+
+	section = title.parentElement;
+	if(!section || !section.classList.contains("sublist")) { return; }
+	checklist_subcheckcross(section);
 }
 
 async function checklist_load_masterlist() { 
@@ -589,7 +639,7 @@ function checklist_process() {
 	let touchendX = 0;
 	let width = screen.width / 2;
 	let itemsList = document.getElementsByClassName('items');
-	let titlesList = document.getElementsByClassName('sublist');
+	let titlesList = document.querySelectorAll('.sublist > .title');
 	let itemHighlight = itemsList[0];
 	itemHighlight.classList.add('highlight');
 
@@ -616,7 +666,7 @@ function checklist_process() {
 		});
 	}
 
-	for (var i = 0; i < titlesList.length; i++) { titlesList[i].addEventListener('dblclick', checklist_subcheckcross, false); }
+	for (var i = 0; i < titlesList.length; i++) { titlesList[i].addEventListener('click', checklist_section_cross, false); }
 
 	checklist_mobile_icons_init();
 	checklist_layout_load();
