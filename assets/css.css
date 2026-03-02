@@ -482,6 +482,11 @@ body.modern-design[mode="dark"] .sublist > .title {
 	background-color:#3a3a3a;
 }
 
+body.modern-design[mode="dark"] .sublist > .title.green,
+body.modern-design[mode="dark"] .checklist-persistent-title {
+	color:#ffffff;
+}
+
 body.modern-design[mode="dark"] .item,
 body.modern-design[mode="dark"] .state,
 body.modern-design[mode="dark"] .comment {
@@ -535,6 +540,11 @@ body[mode="light"] {
 body.modern-design[mode="light"] .sublist > .title {
 	color:#ffffff;
 	background-color:#000000;
+}
+
+body.modern-design[mode="light"] .sublist > .title.green,
+body.modern-design[mode="light"] .checklist-persistent-title {
+	color:#000000;
 }
 
 body.modern-design[mode="light"] .item,
