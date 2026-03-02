@@ -203,12 +203,6 @@ body.two-column-view .checklist-shell {
 }
 
 #content.two-column-layout > .sublist {
-	break-inside:avoid-column;
-	-webkit-column-break-inside:avoid;
-	page-break-inside:avoid;
-}
-
-#content.two-column-layout > .sublist.oversized {
 	break-inside:auto;
 	-webkit-column-break-inside:auto;
 	page-break-inside:auto;
