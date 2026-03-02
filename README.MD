@@ -297,3 +297,4 @@ Version 1.0.1 (2024/06/11)
 Version 1.0: (2024/06/10)
 - First version.
 - Added: Checklist for Cessna 172 Skyhawk (X-Plane w/ 530 GPS).
+-
