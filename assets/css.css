@@ -113,6 +113,10 @@ a { text-decoration:none; }
 	overflow-wrap:anywhere;
 }
 
+.sidebar-link-done {
+	text-decoration: line-through;
+}
+
 .checklist-persistent-title {
 	display:none;
 	margin-top:0;

@@ -368,6 +368,7 @@ function checklist_sidebar_build() {
 		let link = document.createElement("a");
 		link.className = "sidebar-link";
 		link.setAttribute("mode", current_mode);
+		link.dataset.sectionId = heading.id;
 		link.href = "#" + heading.id;
 		link.textContent = heading.textContent;
 		link.addEventListener("click", function(event) {
@@ -384,7 +385,32 @@ function checklist_sidebar_build() {
 	});
 
 	sidebar.appendChild(links_el);
+	checklist_sidebar_update_section_completion();
 	checklist_layout_handle_resize();
+}
+
+function checklist_sidebar_update_section_completion() {
+	let sidebar = document.getElementById("checklist_sidebar");
+	let sections = Array.from(document.querySelectorAll("#content .sublist"));
+
+	if(!sidebar || sections.length === 0) { return; }
+
+	sections.forEach(function(section) {
+		let heading = section.querySelector(".title");
+		let link;
+		let items;
+		let all_done;
+
+		if(!heading || !heading.id) { return; }
+		link = sidebar.querySelector('.sidebar-link[data-section-id="' + heading.id + '"]');
+		if(!link) { return; }
+
+		items = Array.from(section.querySelectorAll(".items"));
+		all_done = items.length > 0 && items.every(function(item) {
+			return item.classList.contains("items-done");
+		});
+		link.classList.toggle("sidebar-link-done", all_done);
+	});
 }
 
 function checklist_item_cross() {
@@ -399,6 +425,7 @@ function checklist_item_cross() {
 	
 	// Toggle this item
 	toggleItemState(this, !isDone);
+	checklist_sidebar_update_section_completion();
 	
 	// If unchecking, highlight this item and return
 	if(isDone) {
@@ -447,6 +474,7 @@ function checklist_subcheckcross(event) {
 		item.classList.remove('highlight');
 		toggleItemState(item, shouldMarkDone);
 	});
+	checklist_sidebar_update_section_completion();
 	
 	// Scroll to appropriate position
 	let scrollTarget = shouldMarkDone ? items[items.length - 1] : items[0];
@@ -494,8 +522,8 @@ function checklist_process() {
 			touchendX = event.changedTouches[0].screenX;
 			if(touchstartX > touchendX) {
 				if( (touchstartX - touchendX) > width) { 
-					this.querySelector(".state").classList.remove('state-done');
-					this.querySelector(".strike").style.opacity = "0";
+					toggleItemState(this, false);
+					checklist_sidebar_update_section_completion();
 					for(i =0; i < itemsList.length; i++) { itemsList[i].classList.remove('highlight'); }
 					this.classList.add('highlight');
 					
