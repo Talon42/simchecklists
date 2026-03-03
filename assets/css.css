@@ -217,15 +217,10 @@ body.two-column-view .checklist-shell {
 
 .content.two-column-layout .items {
 	display:grid;
-	grid-template-columns:minmax(0, 1fr) auto;
-	column-gap:12px;
-	align-items:start;
-	overflow:hidden;
-}
-
-body.modern-design .content.two-column-layout .items {
 	grid-template-columns:minmax(0, auto) minmax(0, 1fr) auto;
 	column-gap:0;
+	align-items:start;
+	overflow:hidden;
 }
 
 .content.two-column-layout .item,
@@ -384,8 +379,8 @@ body.modern-design .content.two-column-layout .items {
 .items {
 	position:relative;
 	display:grid;
-	grid-template-columns:minmax(0, 1fr) auto;
-	column-gap:12px;
+	grid-template-columns:minmax(0, auto) minmax(0, 1fr) auto;
+	column-gap:0;
 	align-items:start;
 	padding:5px 10px 5px 10px;
 }
@@ -403,8 +398,10 @@ body.modern-design .content.two-column-layout .items {
 }
 
 .item-dots {
-	display:none;
+	display:block;
+	visibility:hidden;
 	flex:1;
+	min-width:0;
 	overflow:hidden;
 	white-space:nowrap;
 }
@@ -413,13 +410,8 @@ body.modern-design .content.two-column-layout .items {
 	content:"................................................................................................................................................................................................";
 }
 
-body.modern-design .items {
-	grid-template-columns:minmax(0, auto) minmax(0, 1fr) auto;
-	gap:0;
-}
-
 body.modern-design .item-dots {
-	display:block;
+	visibility:visible;
 }
 
 body.single-page-view.modern-design .item-dots {

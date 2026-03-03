@@ -490,6 +490,11 @@ function checklist_design_apply() {
 		btn.innerHTML = iconRender(design_icon);
 	});
 	sessionStorage.setItem("checklist_design", checklist_design_mode);
+
+	// Design classes change checklist geometry, so refresh sidebar/layout positions.
+	window.requestAnimationFrame(function() {
+		checklist_layout_handle_resize();
+	});
 }
 
 function checklist_design_switch() {
