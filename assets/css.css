@@ -476,6 +476,29 @@ body[mode="dark"] {
 	background-color:var(--dark_bg_color);
 	color:var(--dark_txt_color);
 }
+
+body.modern-design[mode="dark"] .sublist > .title {
+	color:#ffffff;
+	background-color:#3a3a3a;
+}
+
+body.modern-design[mode="dark"] .sublist > .title.green,
+body.modern-design[mode="dark"] .checklist-persistent-title {
+	color:#ffffff;
+}
+
+body.modern-design[mode="dark"] .item,
+body.modern-design[mode="dark"] .state,
+body.modern-design[mode="dark"] .comment {
+	color:#ffffff;
+}
+
+body.modern-design[mode="dark"] .item.items-done,
+body.modern-design[mode="dark"] .items.items-done .state,
+body.modern-design[mode="dark"] .items.items-done .item-dots {
+	color:#9c9c9c;
+}
+
 a[mode="dark"] { color:var(--dark_txt_green); }
 .icon[mode="dark"] { fill:var(--dark_txt_color); }
 .icon-inner[mode="dark"] { fill:var(--light_txt_color); }
@@ -513,6 +536,29 @@ body[mode="light"] {
 	background-color:var(--light_bg_color);
 	color:var(--light_txt_color);
 }
+
+body.modern-design[mode="light"] .sublist > .title {
+	color:#ffffff;
+	background-color:#000000;
+}
+
+body.modern-design[mode="light"] .sublist > .title.green,
+body.modern-design[mode="light"] .checklist-persistent-title {
+	color:#000000;
+}
+
+body.modern-design[mode="light"] .item,
+body.modern-design[mode="light"] .state,
+body.modern-design[mode="light"] .comment {
+	color:#000000;
+}
+
+body.modern-design[mode="light"] .item.items-done,
+body.modern-design[mode="light"] .items.items-done .state,
+body.modern-design[mode="light"] .items.items-done .item-dots {
+	color:#8a8a8a;
+}
+
 a[mode="light"] { color:var(--light_txt_green); }
 .icon[mode="light"] { fill:var(--light_txt_color); }
 .icon-inner[mode="light"] { fill:var(--dark_txt_color); }
