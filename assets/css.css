@@ -23,6 +23,8 @@
 	--checklist-two-column-max-width:200ch;
 	--checklist-column-gap:20px;
 	--checklist-single-column-max-width:100ch;
+	--checklist-responsive-breakpoint:768px;
+	--checklist-responsive-gutter:24px;
 	--font:url('font.otf');
 }
 
@@ -598,22 +600,35 @@ body[mode="light"] #checklist_top_chrome {
 		width:100%;
 		transform:none;
 	}
-	body.two-column-view .main-container {
-		transform:scale(calc(100vw / 1280));
-	}
 	.checklist-sidebar {
 		display:none;
 	}
 }
 
+@media screen and (max-width:768px) {
+	.main-container {
+		width:768px;
+		transform:scale(calc(100vw / 768));
+		transform-origin:top center;
+		margin-left:auto;
+		margin-right:auto;
+	}
+	body.two-column-view .main-container {
+		width:768px;
+		transform:scale(calc(100vw / 768));
+		transform-origin:top center;
+		margin-left:auto;
+		margin-right:auto;
+	}
+}
+
 @media screen and (max-width:479px) {
 	.main-container {
-		width:480px;
-		transform:scale(calc(100vw / 480));
-		padding-top:50px;
-	}
-	.content {
-		padding-top:20px;
+		width:768px;
+		transform:scale(calc(100vw / 768));
+		transform-origin:top center;
+		margin-left:auto;
+		margin-right:auto;
 	}
 	#checklist_top_chrome {
 		padding-top:8px;
