@@ -14,9 +14,15 @@ let checklist_layout_listeners = false;
 let checklist_layout_resize_listener = false;
 let checklist_layout_wheel_listener = false;
 let checklist_layout_scroll_listener = false;
+let checklist_layout_touch_listener = false;
 let checklist_layout_wheel_lock = false;
+let checklist_layout_touch_start_x = 0;
+let checklist_layout_touch_start_y = 0;
 let checklist_mobile_icons_listener = false;
 let checklist_layout_snap_timer = null;
+let checklist_design_mode = "legacy";
+let checklist_design_listeners = false;
+
 
 function checklist_mobile_icons_set_label(expanded) {
 	let toggle = document.getElementById("icons_mobile_toggle");
@@ -244,6 +250,63 @@ function checklist_scroll_to_element(target) {
 	window.scroll({top: target.getBoundingClientRect().top - 10 + window.scrollY, behavior: "smooth"});
 }
 
+function checklist_layout_touch_start(event) {
+	let touch;
+
+	if(!checklist_layout_is_two_column_desktop()) { return; }
+	if(!event.touches || event.touches.length === 0) { return; }
+	touch = event.touches[0];
+	checklist_layout_touch_start_x = touch.clientX;
+	checklist_layout_touch_start_y = touch.clientY;
+}
+
+function checklist_layout_touch_move(event) {
+	let touch;
+	let delta_x;
+	let delta_y;
+
+	if(!checklist_layout_is_two_column_desktop()) { return; }
+	if(!event.touches || event.touches.length === 0) { return; }
+	touch = event.touches[0];
+	delta_x = touch.clientX - checklist_layout_touch_start_x;
+	delta_y = touch.clientY - checklist_layout_touch_start_y;
+
+	if(Math.abs(delta_x) > Math.abs(delta_y) && Math.abs(delta_x) > 8) {
+		event.preventDefault();
+	}
+}
+
+function checklist_layout_touch_end(event) {
+	let content = document.getElementById("content");
+	let touch;
+	let delta_x;
+	let delta_y;
+	let page_info;
+	let target_index;
+	let direction;
+
+	if(!content || !checklist_layout_is_two_column_desktop()) { return; }
+	if(!event.changedTouches || event.changedTouches.length === 0) { return; }
+	touch = event.changedTouches[0];
+	delta_x = touch.clientX - checklist_layout_touch_start_x;
+	delta_y = touch.clientY - checklist_layout_touch_start_y;
+
+	if(Math.abs(delta_x) < 40 || Math.abs(delta_x) <= Math.abs(delta_y)) { return; }
+
+	event.preventDefault();
+	page_info = checklist_layout_current_page(content);
+	if(page_info.starts.length <= 1) { return; }
+
+	direction = delta_x < 0 ? 1 : -1;
+	target_index = page_info.index + direction;
+	if(target_index < 0) { target_index = 0; }
+	if(target_index >= page_info.starts.length) { target_index = page_info.starts.length - 1; }
+	if(target_index == page_info.index) { return; }
+
+	content.scrollTo({ left: page_info.starts[target_index], behavior: "smooth" });
+	checklist_layout_schedule_snap();
+}
+
 function checklist_layout_wheel_scroll(event) {
 	let content = document.getElementById("content");
 	let page_info;
@@ -395,8 +458,64 @@ function checklist_layout_load() {
 		content.addEventListener("scroll", checklist_layout_handle_scroll, false);
 		checklist_layout_scroll_listener = true;
 	}
+	if(!checklist_layout_touch_listener && content) {
+		content.addEventListener("touchstart", checklist_layout_touch_start, { passive: true });
+		content.addEventListener("touchmove", checklist_layout_touch_move, { passive: false });
+		content.addEventListener("touchend", checklist_layout_touch_end, { passive: false });
+		checklist_layout_touch_listener = true;
+	}
 
 	checklist_layout_apply();
+}
+
+function checklist_design_apply() {
+	let design_buttons;
+	let design_icon;
+	let design_title;
+
+	if(document.body) {
+		document.body.classList.toggle("modern-design", checklist_design_mode == "modern");
+		document.body.classList.toggle("legacy-design", checklist_design_mode == "legacy");
+	}
+
+	design_icon = checklist_design_mode == "modern" ? "ui-modern" : "ui-legacy";
+	design_title = checklist_design_mode == "modern" ? "Switch to legacy design" : "Switch to modern design";
+	design_buttons = document.querySelectorAll('.design_switch');
+	design_buttons.forEach(function(btn) {
+		btn.setAttribute("title", design_title);
+	});
+
+	document.querySelectorAll('.design_icon').forEach(function(btn) {
+		btn.setAttribute("icon", design_icon);
+		btn.innerHTML = iconRender(design_icon);
+	});
+	sessionStorage.setItem("checklist_design", checklist_design_mode);
+}
+
+function checklist_design_switch() {
+	if(checklist_design_mode == "legacy") {
+		checklist_design_mode = "modern";
+	} else {
+		checklist_design_mode = "legacy";
+	}
+	checklist_design_apply();
+}
+
+function checklist_design_load() {
+	let design_buttons;
+
+	if(sessionStorage.getItem("checklist_design") !== null) {
+		checklist_design_mode = sessionStorage.getItem("checklist_design");
+	}
+	if(checklist_design_mode !== "modern") { checklist_design_mode = "legacy"; }
+
+	if(!checklist_design_listeners) {
+		design_buttons = document.querySelectorAll('.design_switch');
+		design_buttons.forEach(function(btn) { btn.addEventListener('click', checklist_design_switch, false); });
+		checklist_design_listeners = true;
+	}
+
+	checklist_design_apply();
 }
 
 function checklist_heading_id(title, id_cache) {
@@ -690,6 +809,7 @@ function checklist_process() {
 
 	checklist_mobile_icons_init();
 	checklist_layout_load();
+	checklist_design_load();
 }
 
 async function checklist_load_file(checklist_file) { 
@@ -742,6 +862,7 @@ function checklist_load_items(array) {
 			contentHTML += '<div class="items">';
 			contentHTML += '<div class="strike" mode="dark"></div>';
 			contentHTML += '<div class="item" mode="dark">' + line_array[0] +  '</div>';
+			contentHTML += '<div class="item-dots" aria-hidden="true"></div>';
 			contentHTML += '<div class="state"mode="dark">'+ line_array[1] + '</div></div>';
 
 		}
