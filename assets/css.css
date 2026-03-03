@@ -150,6 +150,12 @@ body.two-column-view .checklist-shell {
 	margin-top:20px;
 }
 
+body.single-page-view .content,
+body.single-page-view #content {
+	margin-left:auto;
+	margin-right:auto;
+}
+
 .content.two-column-layout {
 	max-width:var(--checklist-two-column-max-width);
 	column-count:2;
@@ -422,6 +428,15 @@ body.single-page-view.modern-design .item-dots {
 .footer { 
 	padding-top:50px;
 	font-size:10px; 
+}
+
+.footer-text {
+	display:-webkit-box;
+	-webkit-box-orient:vertical;
+	-webkit-line-clamp:2;
+	overflow:hidden;
+	line-height:2;
+	max-height:calc(2 * 2em);
 }
 
 .mode_index { 
