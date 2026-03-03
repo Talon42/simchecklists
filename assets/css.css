@@ -21,6 +21,7 @@
 	--single-page-top-offset:0px;
 	--two-column-footer-offset:0px;
 	--checklist-two-column-max-width:200ch;
+	--checklist-two-column-min-width:1280px;
 	--checklist-column-gap:20px;
 	--checklist-single-column-max-width:100ch;
 	--checklist-responsive-breakpoint:768px;
@@ -136,41 +137,6 @@ body.two-column-view .checklist-shell {
 	height:calc(100% - var(--two-column-footer-offset));
 }
 
-.checklist-sidebar {
-	position:fixed;
-	top:0;
-	padding:10px;
-	box-sizing:border-box;
-	width:220px;
-	max-height:calc(100vh - 90px);
-	overflow:auto;
-	overflow-x:hidden;
-	z-index:2;
-}
-
-.sidebar-heading {
-	font-size:16px;
-	padding-bottom:10px;
-}
-
-.sidebar-links {
-	display:flex;
-	flex-direction:column;
-	gap:6px;
-}
-
-.sidebar-link {
-	display:block;
-	font-size:14px;
-	padding-top:5px;
-	padding-bottom:5px;
-	overflow-wrap:anywhere;
-}
-
-.sidebar-link-done {
-	text-decoration: line-through;
-}
-
 .checklist-persistent-title {
 	display:none;
 	margin-top:0;
@@ -243,8 +209,13 @@ body.two-column-view .checklist-shell {
 	padding:10px;
 } 
 
+.sublist > .title {
+	margin-top:5px;
+	margin-bottom:5px;
+}
+
 .title.green {
-	margin-bottom:20px;
+	margin-bottom:5px;
 	text-align:center;
 }
 
@@ -518,7 +489,6 @@ a[mode="dark"] { color:var(--dark_txt_green); }
 .writer_pad[mode="dark"] { 
 	color:var(--light_txt_color);
 }
-.sidebar-heading[mode="dark"] { color:var(--dark_txt_yellow); }
 
 /* LIGHT MODE */
 body[mode="light"] {
@@ -578,7 +548,6 @@ a[mode="light"] { color:var(--light_txt_green); }
 .writer_pad[mode="light"] { 
 	color:var(--dark_txt_color);
 }
-.sidebar-heading[mode="light"] { color:var(--light_txt_yellow); }
 
 body[mode="dark"] #checklist_top_chrome {
 	background-color:var(--dark_bg_color);
@@ -600,9 +569,6 @@ body[mode="light"] #checklist_top_chrome {
 		width:100%;
 		transform:none;
 	}
-	.checklist-sidebar {
-		display:none;
-	}
 }
 
 @media screen and (max-width:768px) {
@@ -619,6 +585,9 @@ body[mode="light"] #checklist_top_chrome {
 		transform-origin:top center;
 		margin-left:auto;
 		margin-right:auto;
+	}
+	.checklist-shell {
+		max-width:var(--checklist-two-column-max-width);
 	}
 }
 
