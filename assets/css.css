@@ -20,6 +20,9 @@
 	--bar_bg_color:#272822;
 	--single-page-top-offset:0px;
 	--two-column-footer-offset:0px;
+	--checklist-two-column-max-width:200ch;
+	--checklist-column-gap:20px;
+	--checklist-single-column-max-width:100ch;
 	--font:url('font.otf');
 }
 
@@ -116,13 +119,13 @@ body.two-column-view .footer {
 			
 .content { 
 	width:100%;
-	max-width:600px;
+	max-width:var(--checklist-single-column-max-width);
 	padding-bottom:40px; 
 }
 
 .checklist-shell {
 	width:100%;
-	max-width:1100px;
+	max-width:var(--checklist-two-column-max-width);
 	/* Compensate when fixed top chrome becomes taller (persistent title). */
 	margin-top:max(0px, calc(var(--single-page-top-offset) - 150px));
 }
@@ -175,22 +178,14 @@ body.two-column-view .checklist-shell {
 	padding-bottom:20px;
 }
 
-.checklist-shell .content {
-	max-width:none;
-}
-
-.checklist-shell .content.two-column-layout {
-	max-width:none;
-}
-
 #content {
 	margin-top:20px;
 }
 
 .content.two-column-layout {
-	max-width:1200px;
+	max-width:var(--checklist-two-column-max-width);
 	column-count:2;
-	column-gap:20px;
+	column-gap:var(--checklist-column-gap);
 	column-fill:auto;
 	height:calc(100vh - 40px);
 	max-height:calc(100vh - 40px);
